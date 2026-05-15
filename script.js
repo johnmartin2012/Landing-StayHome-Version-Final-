@@ -55,6 +55,14 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 });
 
 /* ── Hero entrance animation ────────────────────────────────── */
+// Set initial invisible states here (not in CSS) so content is always
+// visible as a fallback if GSAP CDN is slow or blocked.
+gsap.set('.hero__label',          { opacity: 0 });
+gsap.set('.hero__line',           { opacity: 0, y: 70 });
+gsap.set('.hero__sub',            { opacity: 0 });
+gsap.set('.hero__actions',        { opacity: 0 });
+gsap.set('.hero__scroll-indicator', { opacity: 0 });
+
 const heroTL = gsap.timeline({ delay: 0.15 });
 
 heroTL

@@ -213,13 +213,17 @@ ul { list-style: none; }
   background: rgba(11,9,6,.97);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(196,154,69,.12);
-  padding: 28px var(--px) 32px;
+  /* border-bottom and padding only applied when open — prevents bleed-through on mobile */
+  padding: 0 var(--px);
   max-height: 0;
   overflow: hidden;
-  transition: max-height .4s ease;
+  transition: max-height .4s ease, padding .35s ease;
 }
-.nav__mobile.is-open { max-height: 500px; }
+.nav__mobile.is-open {
+  max-height: 500px;
+  padding: 28px var(--px) 32px;
+  border-bottom: 1px solid rgba(196,154,69,.12);
+}
 .nav__mobile ul { display: flex; flex-direction: column; gap: 18px; }
 .nav__mobile a {
   font-family: var(--font-body);
@@ -245,7 +249,8 @@ ul { list-style: none; }
 /* ── Hero ───────────────────────────────────────────────────── */
 .hero {
   position: relative;
-  min-height: 100vh;
+  min-height: 100vh;       /* desktop fallback */
+  min-height: 100svh;      /* mobile: excludes browser chrome (address bar) */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -288,7 +293,7 @@ ul { list-style: none; }
   text-transform: uppercase;
   color: var(--gold);
   margin-bottom: 2.2rem;
-  opacity: 0;
+  /* opacity set by gsap.set() — keeps content visible if GSAP CDN is slow */
 }
 .hero__heading {
   font-family: var(--font-disp);
@@ -300,8 +305,7 @@ ul { list-style: none; }
 }
 .hero__line {
   display: block;
-  opacity: 0;
-  transform: translateY(70px);
+  /* opacity + transform set by gsap.set() */
 }
 .hero__line--italic { font-style: italic; color: var(--gold-lt); }
 .hero__sub {
@@ -310,15 +314,15 @@ ul { list-style: none; }
   line-height: 1.75;
   max-width: 520px;
   margin: 0 auto 3rem;
-  opacity: 0;
   color: rgba(232,220,200,.82);
+  /* opacity set by gsap.set() */
 }
 .hero__actions {
   display: flex;
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
-  opacity: 0;
+  /* opacity set by gsap.set() */
 }
 .hero__scroll-indicator {
   position: absolute;
@@ -330,7 +334,7 @@ ul { list-style: none; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  opacity: 0;
+  /* opacity set by gsap.set() */
 }
 .hero__scroll-indicator span {
   font-family: var(--font-body);
@@ -1123,7 +1127,24 @@ ul { list-style: none; }
 }
 
 @media (max-width: 600px) {
-  .hero__heading { font-size: clamp(3rem, 14vw, 5rem); }
+  /* ── Hero mobile fixes ── */
+  .hero { min-height: 100svh; }
+  .hero__content {
+    padding-top: 90px;    /* clear the fixed nav bar */
+    padding-bottom: 70px; /* clear the scroll indicator space */
+  }
+  .hero__label { margin-bottom: 1rem; font-size: 0.65rem; }
+  .hero__heading {
+    font-size: clamp(2.4rem, 10.5vw, 3.6rem);
+    margin-bottom: 1rem;
+    line-height: 1.05;
+  }
+  .hero__sub {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    margin-bottom: 1.6rem;
+  }
+  .hero__scroll-indicator { display: none; }
   .hero__actions { flex-direction: column; align-items: center; }
   .hero__actions .btn { width: 100%; justify-content: center; }
 
