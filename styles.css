@@ -1179,7 +1179,7 @@ ul { list-style: none; }
 
 /* ── Booking Form ───────────────────────────────────────────── */
 .booking {
-  background: #1a2e1e;
+  background: var(--dark-3);
   padding: var(--section-py) 0;
 }
 .booking .section-label {
