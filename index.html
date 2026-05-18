@@ -404,7 +404,7 @@
         <p class="section-sub" style="margin: 0 auto;">Eddie will confirm your booking within minutes via WhatsApp.</p>
       </div>
 
-      <form class="booking-form" id="bookingForm" novalidate>
+      <form class="booking-form" id="bookingForm" action="https://formspree.io/f/mredgqzz" method="POST" novalidate>
 
         <!-- Row 1: Name + Email -->
         <div class="booking-form__row">
@@ -699,7 +699,7 @@
       notesEl.addEventListener('input', function () { countEl.textContent = this.value.length; });
     }
 
-    /* ── Form submission ── */
+    /* ── Form submission → Formspree ── */
     var form = document.getElementById('bookingForm');
     if (!form) return;
 
@@ -735,15 +735,15 @@
         return;
       }
 
-      /* Build WhatsApp message */
+      /* Collect treatment + location (not native inputs) */
       var selectedCard = document.querySelector('.treatment-card.is-selected');
-      var treatment    = selectedCard ? selectedCard.getAttribute('data-treatment') : '';
-      var price        = selectedCard ? selectedCard.getAttribute('data-price') : '';
-      var activeBtn    = document.querySelector('.location-btn.is-active');
-      var locType      = activeBtn ? activeBtn.getAttribute('data-location') : '';
-      var notes        = notesEl ? notesEl.value.trim() : '';
+      var treatment    = selectedCard
+        ? selectedCard.getAttribute('data-treatment') + ' (' + selectedCard.getAttribute('data-price') + ')'
+        : '';
+      var activeBtn = document.querySelector('.location-btn.is-active');
+      var locType   = activeBtn ? activeBtn.getAttribute('data-location') : '';
 
-      /* Format date as dd/mm/yyyy */
+      /* Format date dd/mm/yyyy */
       var rawDate = dateEl.value;
       var fmtDate = rawDate;
       if (rawDate) {
@@ -751,20 +751,55 @@
         if (p.length === 3) fmtDate = p[2] + '/' + p[1] + '/' + p[0];
       }
 
-      var msg = "Hi Eddie! I'd like to book a massage.\n\n"
-        + 'Name: '      + nameEl.value.trim()  + '\n'
-        + 'Email: '     + emailEl.value.trim() + '\n'
-        + (phoneEl.value.trim() ? 'Phone: ' + phoneEl.value.trim() + '\n' : '')
-        + 'Date: '      + fmtDate              + '\n'
-        + 'Treatment: ' + treatment + ' (' + price + ')\n'
-        + 'Location: '  + locType              + '\n'
-        + 'Address: '   + addressEl.value.trim()
-        + (notes ? '\n\nNotes: ' + notes : '');
+      var data = {
+        name:          nameEl.value.trim(),
+        email:         emailEl.value.trim(),
+        phone:         phoneEl.value.trim() || '—',
+        date:          fmtDate,
+        treatment:     treatment,
+        location_type: locType,
+        address:       addressEl.value.trim(),
+        notes:         notesEl ? notesEl.value.trim() : ''
+      };
 
-      window.open('https://wa.me/61451567031?text=' + encodeURIComponent(msg), '_blank', 'noopener,noreferrer');
+      var submitBtn = form.querySelector('.booking-form__submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending…';
+
+      fetch('https://formspree.io/f/mredgqzz', {
+        method:  'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body:    JSON.stringify(data)
+      })
+      .then(function (res) {
+        if (res.ok) {
+          form.style.display = 'none';
+          var ok = document.createElement('div');
+          ok.style.cssText = 'text-align:center;padding:60px 0;';
+          ok.innerHTML =
+            '<p class="section-label" style="margin-bottom:1.4rem;">Booking Received</p>'
+            + '<h2 class="section-title" style="margin-bottom:1.2rem;">Thank you &mdash; Eddie will be<br>in touch shortly.</h2>'
+            + '<p class="section-sub" style="margin:0 auto;">Check your WhatsApp and email for confirmation.</p>';
+          form.parentNode.insertBefore(ok, form);
+        } else {
+          return res.json().then(function (json) { throw new Error(json.error || 'error'); });
+        }
+      })
+      .catch(function () {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'SEND BOOKING REQUEST';
+        var errEl = document.getElementById('bf-submit-error');
+        if (!errEl) {
+          errEl = document.createElement('p');
+          errEl.id = 'bf-submit-error';
+          errEl.style.cssText = 'color:#c9a84c;font-style:italic;font-size:.9rem;text-align:center;margin-bottom:14px;';
+          submitBtn.parentNode.insertBefore(errEl, submitBtn);
+        }
+        errEl.textContent = 'Something went wrong. Please try again or message Eddie on WhatsApp.';
+      });
     });
 
-    /* Clear errors on re-input */
+    /* ── Clear field errors on re-input ── */
     form.addEventListener('input', function (e) {
       if (e.target.classList && e.target.classList.contains('is-error')) {
         e.target.classList.remove('is-error');
